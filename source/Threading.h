@@ -13,13 +13,11 @@
 
 class ThreadPool {
 public:
-	// Constructor with number of threads, defaulting to hardware concurrency.
-	// It is explicit to prevent implicit conversions, ensuring that the number of threads is always specified when 
-	// creating a ThreadPool instance.
-	explicit ThreadPool(
-		std::size_t numThreads=std::thread::hardware_concurrency(),
-		std::size_t maxQueueSize=100
-	);
+	// Constructor.
+	// It is explicit to prevent implicit conversions, ensuring that 
+	// input parameters are always specified when creating a 
+	// ThreadPool instance.
+	explicit ThreadPool(std::size_t numThreads, std::size_t maxQueueSize);
 	~ThreadPool();
 
 	// Template method to submit tasks to the thread pool. It accepts any type of callable and 

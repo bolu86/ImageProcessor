@@ -7,8 +7,9 @@ using namespace std::literals::chrono_literals;
 
 int main()
 {
-	std::cout << "Cores: " << std::thread::hardware_concurrency() << std::endl;
-	ThreadPool pool;
+	std::size_t numThreads = std::thread::hardware_concurrency();
+	std::cout << "Cores: " << numThreads << std::endl;
+	ThreadPool pool(numThreads, 10);
 
 	auto f1 = pool.submit([]() {
 		std::this_thread::sleep_for(1s);

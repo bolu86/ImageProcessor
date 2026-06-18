@@ -2,18 +2,14 @@
 
 // Constructor
 // ----------------------------------------------------------------------------
-ThreadPool::ThreadPool(
-	std::size_t numThreads,
-	std::size_t maxQueueSize
-): maxQueueSize_(maxQueueSize) 
-{
-	// Sanity checks. 
-	// These are not user-facing (i.e., not expected to be errors at runtime), 
-	// and should thus be checked during debugging.
-	
-	// Ensure that the pool is created with a valid number of worker threads.
-	assert(numThreads > 0);
-	assert(maxQueueSize > 0);
+ThreadPool::ThreadPool(std::size_t numThreads, std::size_t maxQueueSize)
+	: maxQueueSize_(maxQueueSize) 
+{	
+	// Input checks.
+	if (numThreads == 0)
+		throw std::invalid_argument("ThreadPool must be created with at least one thread.");
+	if (maxQueueSize == 0)
+		throw std::invalid_argument("ThreadPool must be created with a valid queue size.");
 
 	// Fill up the worker container with the specified number of threads, 
 	// each running the workerLoop method.
