@@ -15,7 +15,7 @@ public:
 	// Constructor with number of threads, defaulting to hardware concurrency.
 	// It is explicit to prevent implicit conversions, ensuring that the number of threads is always specified when 
 	// creating a ThreadPool instance.
-	explicit ThreadPool(std::size_t numThreads_=std::thread::hardware_concurrency());
+	explicit ThreadPool(std::size_t numThreads=std::thread::hardware_concurrency());
 	~ThreadPool();
 
 	// Template method to submit tasks to the thread pool. It accepts any type of callable and 
@@ -24,9 +24,14 @@ public:
 	auto submit(F&& f, F_Args&&... args) -> std::future<std::invoke_result_t<F, F_Args...>>;
 
 	// No copy or move since the pool owns threads
-	ThreadPool(ThreadPool&&) = delete;
 	ThreadPool(const ThreadPool&) = delete;
 	ThreadPool& operator=(const ThreadPool&) = delete;
+
+	// Since the compiler never generates move operations if the copy operations are deleted, 
+	// we do not need to explicitly delete the move operations. However, it would be good
+	// practice to explicitly delete them anyway, but it is left commented out here for now.
+	//ThreadPool(ThreadPool&&) = delete;
+	//ThreadPool& operator=(ThreadPool&&) = delete;
 
 private:
 	void workerLoop();

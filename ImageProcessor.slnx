@@ -3,6 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="app/app.vcxproj" />
   <Project Path="source/ImageProcessor.vcxproj" />
   <Project Path="unittests/ImageProcessorTests.vcxproj" />
 </Solution>
