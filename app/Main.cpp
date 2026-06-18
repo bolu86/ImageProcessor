@@ -1,4 +1,4 @@
-// ImageProcessor.cpp : This file contains the 'main' function. Program execution begins and ends there.
+// Main.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include <chrono>
 #include <iostream>
@@ -8,6 +8,7 @@ using namespace std::literals::chrono_literals;
 
 int main()
 {
+	std::cout << "Cores: " << std::thread::hardware_concurrency() << std::endl;
 	ThreadPool pool;
 
 	auto f1 = pool.submit([]() {
