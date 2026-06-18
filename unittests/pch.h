@@ -8,6 +8,11 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
-#include "Threading.h"
+
+#include <atomic>
+#include <chrono>
+#include "CppUnitTest.h"
+#include <stdexcept>
+#include <vector>
 
 #endif //PCH_H
