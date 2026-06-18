@@ -2,6 +2,7 @@
 #include "Threading.h"
 
 // Compile-time checks
+// Test class contracts (non-copyable, non-movable).
 static_assert(
     !std::is_copy_constructible_v<ThreadPool>,
     "ThreadPool must not be copyable"
@@ -27,85 +28,113 @@ using namespace std::literals::chrono_literals;
 // ----------------------------------------------------------------------------
 TEST_CLASS(ThreadingTests)
 {
+private:
+    static std::size_t hardwareConcurrency_;
+    std::unique_ptr<ThreadPool> pool_;
+
 public:
+    TEST_CLASS_INITIALIZE(ClassSetup) {
+        // Fetch the hardware concurrency once and ensure it is a valid value.
+        hardwareConcurrency_ = std::max<std::size_t>(1, std::thread::hardware_concurrency());
+    }
+    //TEST_CLASS_CLEANUP(ClassTeardown) {}
+    TEST_METHOD_INITIALIZE(MethodSetup) {
+        // Default ThreadPool test instance.
+        pool_ = std::make_unique<ThreadPool>(hardwareConcurrency_, 1000);
+    }
+    TEST_METHOD_CLEANUP(MethodTeardown) {
+		// Reset the pool to ensure it is destroyed before the next test starts.
+		pool_.reset();
+    }
     TEST_METHOD(Construction) 
-    {
+    {   
+		// Test class contracts (non-copyable, non-movable).
         Assert::IsFalse(std::is_copy_constructible_v<ThreadPool>);
         Assert::IsFalse(std::is_copy_assignable_v<ThreadPool>);
         Assert::IsFalse(std::is_move_constructible_v<ThreadPool>);
         Assert::IsFalse(std::is_move_assignable_v<ThreadPool>);
 
-        // Default construction
-        {
-            ThreadPool pool;
-            size_t default_number_of_threads = std::thread::hardware_concurrency();
-            Assert::AreEqual(default_number_of_threads, pool.getNumThreads());
-            size_t default_max_queue_size = 100;
-            Assert::AreEqual(default_max_queue_size, pool.getMaxQueueSize());
-        }
-
-		// Parameterized construction
+		// Test construction.
         {
             ThreadPool pool(4, 10);
             Assert::AreEqual(static_cast<size_t>(4), pool.getNumThreads());
             Assert::AreEqual(static_cast<size_t>(10), pool.getMaxQueueSize());
         }
+
+		// Test invalid construction parameters.
+		Assert::ExpectException<std::invalid_argument>(
+            [] {ThreadPool pool(0, 10);}
+        );
+		Assert::ExpectException<std::invalid_argument>(
+            [] {ThreadPool pool(4, 0);}
+        );
     }
 
     TEST_METHOD(SubmitSingleTask)
     {
-        ThreadPool pool;
-        auto future = pool.submit([] { return 42; });
-        Assert::AreEqual(42, future->get());
-    }
+        auto result = pool_->submit([] { return 42; });
 
-    TEST_METHOD(QueueEmptiesOnThreadTakingTask)
-    {
-        ThreadPool pool;
-
-        std::promise<void> releaseWorker;
-        std::shared_future<void> releaseSignal = releaseWorker.get_future();
-
-        std::promise<void> workerStarted;
-        std::shared_future<void> workerStartedFuture = workerStarted.get_future();
-
-        auto blocker = pool.submit([releaseSignal, &workerStarted] {
-            workerStarted.set_value();
-            releaseSignal.wait();
-        });
-
-        workerStartedFuture.wait();
-
-        //Assert::AreEqual(static_cast<std::size_t>(0), pool.getQueueSize());
-
-        // Cleanup: release the blocked worker so the pool can shut down cleanly
-        releaseWorker.set_value();
+        // Check that the returned std::optional has a value.
+        Assert::IsTrue(result.has_value());
+        // Check that the future it contains returns the expected result.
+        Assert::AreEqual(42, result->get());
     }
 
     TEST_METHOD(TaskWithArguments)
     {
-        ThreadPool pool;
-        auto future = pool.submit([](int a, int b) { return a + b; }, 10, 20);
+        auto future = pool_->submit([](int a, int b) { return a + b; }, 10, 20);
         Assert::AreEqual(30, future->get());
+    }
+
+    TEST_METHOD(QueueEmptiesOnWorkerTakingTask)
+    {
+        // Create a promise and future to control when the first task completes.
+        // Note: This pattern is much better (more deterministic) than using
+        // sleep_for to try to time the test correctly.
+        std::promise<void> releaseWorker;
+        // Need to use shared_future here since we need to be able to copy it
+        // into the lambda for the worker task (std::future is not copyable).
+        std::shared_future<void> releaseSignal = releaseWorker.get_future();
+            
+		// Use a similar promise/future method to ensure the worker thread has started 
+        // and is blocked on the releaseSignal before we check the queue size.
+        std::promise<void> workerStarted;
+        std::shared_future<void> workerStartedFuture = workerStarted.get_future();
+
+        auto blocker = pool_->submit([releaseSignal, &workerStarted] {
+            // Signal that the worker has started.
+            workerStarted.set_value();
+            // Block the thread execution.
+            releaseSignal.wait();
+        });
+
+        // Wait until the worker thread has started, ensuring that we have
+        // passed the point where the queue has been popped.
+        workerStartedFuture.wait();
+
+        // Ensure that the task queue popped the added task.
+        Assert::AreEqual(static_cast<std::size_t>(0), pool_->getQueueSize());
+
+        // Cleanup: release the blocked worker so the pool can shut down cleanly.
+        releaseWorker.set_value();
     }
 
     TEST_METHOD(MultipleTasksAllCompleteCorrectly)
     {
-        ThreadPool pool(4);
         std::vector<std::optional<std::future<int>>> futures;
 
         for (int i = 0; i < 100; ++i)
-            futures.push_back(pool.submit([i] { return i * i; }));
+            futures.push_back(pool_->submit([i] { return i * i; }));
 
-        // No waiting, futures.get() is blocking until the result is ready.
+        // futures.get() is blocking until the result is ready, 
+        // ensuring all tasks complete successively.
         for (int i = 0; i < 100; ++i)
             Assert::AreEqual(i * i, futures[i]->get());
     }
 
     TEST_METHOD(ExceptionPropagatesThroughFuture)
     {
-        ThreadPool pool(2);
-        auto future = pool.submit(
+        auto future = pool_->submit(
 		    // No return value, can't auto-deduce type, so specify it explicitly as int.
             []() -> int {throw std::runtime_error("some error");}
         );
@@ -122,7 +151,7 @@ public:
 		// Use a large task queue to avoid hitting the max queue size limit 
         // during this test, which would cause tasks to be dropped and lead 
         // to false negatives.
-        ThreadPool pool(8, 2000);
+        ThreadPool pool(hardwareConcurrency_, 2000);
         std::vector<std::optional<std::future<void>>> futures;
 		
         // Use atomic int for thread-safe counting (ensures no race conditions
@@ -160,7 +189,7 @@ public:
 
 		// Scope to ensure the pool is destroyed before we check the count.
         {
-            ThreadPool pool(2);
+            ThreadPool pool(2, 1000);
             for (int i = 0; i < 20; ++i)
             {
                 pool.submit([&completedCount] {
@@ -176,32 +205,16 @@ public:
 
     TEST_METHOD(SubmitAfterDestructionThrows)
     {
-        // We can't keep using the pool after it's destroyed, so we need
-        // a way to force stopping_ = true while the object is still alive.
-        ThreadPool pool(2);
-
         // Shut down the pool.
-        pool.shutdown();
+        pool_->shutdown();
 
         // Verify that we are shutting down.
-		Assert::IsTrue(pool.isStopping());
+		Assert::IsTrue(pool_->isStopping());
 
         // Submitting a new task should now trigger an exception.
-        Assert::ExpectException<std::runtime_error>([&pool] {
-            pool.submit([] { return 1; });
+        Assert::ExpectException<std::runtime_error>([this] {
+            pool_->submit([] { return 1; });
         });
-    }
-
-    TEST_METHOD(SubmitSucceedsWhenQueueHasSpace)
-    {
-        // Create a pool with 1 thread and max 10 tasks.
-        ThreadPool pool(1, 10);
-        auto result = pool.submit([] { return 42; });
-
-        // Check that the returned std::optional has a value.
-        Assert::IsTrue(result.has_value());
-        // Check that the future it contains returns the expected result.
-        Assert::AreEqual(42, result->get());
     }
 
     TEST_METHOD(SubmitFailsWhenQueueFull)
@@ -210,11 +223,7 @@ public:
         ThreadPool pool(1, 2);
         
 		// Create a promise and future to control when the first task completes.
-        // Note: This pattern is much better (more deterministic) than using
-		// sleep_for to try to time the test correctly.
         std::promise<void> releaseWorker;
-        // Need to use shared_future here since we need to be able to copy it
-		// into the lambda for the worker task (std::future is not copyable).
         std::shared_future<void> releaseSignal = releaseWorker.get_future();
 
         std::promise<void> workerStarted;
@@ -247,3 +256,6 @@ public:
         releaseWorker.set_value();
     }
 };
+
+// Define static member variables.
+std::size_t ThreadingTests::hardwareConcurrency_{ 0 };

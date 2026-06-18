@@ -42,10 +42,10 @@ public:
 	// This is not thread-safe and may be inaccurate, 
 	// but it can be useful for monitoring or 
 	// debugging purposes.
-	//inline std::size_t getQueueSize() const {
-	//	std::lock_guard<std::mutex> lock(mutex_);
-	//	return tasks_.size();
-	//}
+	inline std::size_t getQueueSize() const {
+		std::lock_guard<std::mutex> lock(mutex_);
+		return tasks_.size();
+	}
 
 	// Trivial getters
 	inline std::size_t getNumThreads() const { return workers_.size(); }
@@ -69,7 +69,7 @@ private:
 	bool stopping_{ false };
 
 	// Mutex and condition variable
-	std::mutex mutex_;
+	mutable std::mutex mutex_;
 	std::condition_variable cv_;
 };
 
