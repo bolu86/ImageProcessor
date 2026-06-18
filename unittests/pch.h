@@ -12,7 +12,5 @@
 #include <atomic>
 #include <chrono>
 #include "CppUnitTest.h"
-#include <stdexcept>
-#include <vector>
 
 #endif //PCH_H
