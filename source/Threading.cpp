@@ -2,9 +2,18 @@
 
 // Constructor
 // ----------------------------------------------------------------------------
-ThreadPool::ThreadPool(std::size_t numThreads) {
+ThreadPool::ThreadPool(
+	std::size_t numThreads,
+	std::size_t maxQueueSize
+): maxQueueSize_(maxQueueSize) 
+{
+	// Sanity checks. 
+	// These are not user-facing (i.e., not expected to be errors at runtime), 
+	// and should thus be checked during debugging.
+	
 	// Ensure that the pool is created with a valid number of worker threads.
 	assert(numThreads > 0);
+	assert(maxQueueSize > 0);
 
 	// Fill up the worker container with the specified number of threads, 
 	// each running the workerLoop method.
@@ -17,16 +26,21 @@ ThreadPool::ThreadPool(std::size_t numThreads) {
 // Destructor
 // ----------------------------------------------------------------------------
 ThreadPool::~ThreadPool() {
+	shutdown();
+	// Wait for all worker threads to finish before destroying the pool.
+	for (auto& t : workers_) t.join(); 
+}
+
+// shutDown
+// ----------------------------------------------------------------------------
+void ThreadPool::shutdown() {
 	{
 		std::lock_guard<std::mutex> lock(mutex_);
 		// Signal the worker threads to stop.
-		stopping_ = true; 
+		stopping_ = true;
 	}
 	// Wake up all worker threads to ensure they can exit if they are waiting.
-	cv_.notify_all(); 
-
-	// Wait for all worker threads to finish before destroying the pool.
-	for (auto& t : workers_) t.join(); 
+	cv_.notify_all();
 }
 
 // workerLoop
@@ -48,7 +62,6 @@ void ThreadPool::workerLoop() {
 
 			// If the pool is stopping and there are no tasks left, exit the loop.
 			if (stopping_ && tasks_.empty()) return;
-
 			// Get the next task from the queue by moving it into the temporary variable.
 			work = std::move(tasks_.front());
 			tasks_.pop();

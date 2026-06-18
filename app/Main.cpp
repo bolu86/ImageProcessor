@@ -1,7 +1,6 @@
 // Main.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include <chrono>
-#include <iostream>
 #include "Threading.h"
 
 using namespace std::literals::chrono_literals;
@@ -20,8 +19,8 @@ int main()
 		return x + y;
 		}, 10, 20);
 
-	std::cout << "f1: " << f1.get() << "\n";  // blocks until ready
-	std::cout << "f2: " << f2.get() << "\n";
+	std::cout << "Result: " << f1->get() << "\n";
+	std::cout << "Result: " << f2->get() << "\n";
 }
 
 

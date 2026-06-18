@@ -3,7 +3,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="app/app.vcxproj" />
-  <Project Path="source/ImageProcessor.vcxproj" />
-  <Project Path="unittests/ImageProcessorTests.vcxproj" />
+  <Project Path="app/app.vcxproj" Id="e5c78b5b-ea18-43f9-857e-f07d036cffdb" />
+  <Project Path="source/ImageProcessor.vcxproj" Id="c02c2e45-a27a-4ab4-82f5-661e2fa1b7f5" />
+  <Project Path="unittests/ImageProcessorTests.vcxproj" Id="8f46fb7d-0c17-649d-deec-07c2a607f7f8" />
 </Solution>
