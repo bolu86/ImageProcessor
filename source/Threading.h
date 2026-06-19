@@ -85,12 +85,18 @@ auto ThreadPool::submit(F&& f, F_Args&&... args)
 	// Alias the return type of the callable F with arguments Args... for convenience.
 	using ReturnType = std::invoke_result_t<F, F_Args...>;
 
-	// Bind the callable and its arguments into a packaged_task.
-	// Use std::forward to preserve the value category (lvalue/rvalue) 
-	// of the arguments, i.e., perfect forwarding.
-	// Wrap in shared pointer since std::packaged_task does not support copying.
+	// Prepare a task to put into the queue.
+	// 1. Wrap the callable and arguments into a lambda so that they can be called later by a worker.
+	// 2. Wrap the lambda into a packaged_task. This allows us to get a future for the result of the task.
+	// 3. Wrap the packaged_task in a shared_pointer since packaged_task does not support copying.
 	auto task = std::make_shared<std::packaged_task<ReturnType()>>(
-		std::bind(std::forward<F>(f), std::forward<F_Args>(args)...)
+		// Use std::forward to preserve the value category (lvalue/rvalue) of the arguments, 
+		// i.e., perfect forwarding. Use mutable because the lambda capture-by-value adds 
+		// const qualifiers by default.
+		[f = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+			// Uniform way to call the callable with its arguments.
+			std::apply(f, args);
+		}
 	);
 
 	// Get the future from the packaged_task to return to the caller.
@@ -111,11 +117,7 @@ auto ThreadPool::submit(F&& f, F_Args&&... args)
 			// e.g. drop data.
 			return std::nullopt;
 
-		// Wrap the packaged_task in a type-erased void() lambda
-		// This allows us to store tasks of any return type in the same queue, 
-		// since they will all be executed as void() functions by the worker threads. 
-		// The lambda captures the shared pointer to the packaged_task and calls its 
-		// operator() to execute the task when the worker thread processes it.
+		// Wrap the task pointer in a type-erased void() lambda to match the element type of the queue.
 		// Any return value of (*task)() is discarded since it is not needed in that way.
 		// Instead, the real result of interest is stored in the future that we return 
 		// to the caller.
