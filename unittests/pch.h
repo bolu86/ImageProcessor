@@ -12,5 +12,6 @@
 #include <atomic>
 #include <chrono>
 #include "CppUnitTest.h"
+#include "TestHelpers.h"
 
 #endif //PCH_H

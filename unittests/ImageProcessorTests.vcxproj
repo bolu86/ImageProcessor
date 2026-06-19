@@ -183,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="TestHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\source\ImageProcessor.vcxproj">

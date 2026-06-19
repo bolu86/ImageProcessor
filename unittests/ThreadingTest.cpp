@@ -1,4 +1,6 @@
 #include "pch.h"
+
+// Class to be tested
 #include "Threading.h"
 
 // Compile-time checks
@@ -88,35 +90,30 @@ public:
 
     TEST_METHOD(QueueEmptiesOnWorkerTakingTask)
     {
-        // Create a promise and future to control when the first task completes.
-        // Note: This pattern is much better (more deterministic) than using
-        // sleep_for to try to time the test correctly.
-        std::promise<void> releaseWorker;
-        // Need to use shared_future here since we need to be able to copy it
-        // into the lambda for the worker task (std::future is not copyable).
-        std::shared_future<void> releaseSignal = releaseWorker.get_future();
-            
-		// Use a similar promise/future method to ensure the worker thread has started 
-        // and is blocked on the releaseSignal before we check the queue size.
-        std::promise<void> workerStarted;
-        std::shared_future<void> workerStartedFuture = workerStarted.get_future();
+  //      std::promise<void> releaseWorker;
+  //      std::shared_future<void> releaseSignal = releaseWorker.get_future();
+  //          
+		//// Use a similar promise/future method to ensure the worker thread has started 
+  //      // and is blocked on the releaseSignal before we check the queue size.
+  //      std::promise<void> workerStarted;
+  //      std::shared_future<void> workerStartedFuture = workerStarted.get_future();
 
-        auto blocker = pool_->submit([releaseSignal, &workerStarted] {
-            // Signal that the worker has started.
-            workerStarted.set_value();
-            // Block the thread execution.
-            releaseSignal.wait();
-        });
+  //      auto blocker = pool_->submit([releaseSignal, &workerStarted] {
+  //          // Signal that the worker has started.
+  //          workerStarted.set_value();
+  //          // Block the thread execution.
+  //          releaseSignal.wait();
+  //      });
 
-        // Wait until the worker thread has started, ensuring that we have
-        // passed the point where the queue has been popped.
-        workerStartedFuture.wait();
+  //      workerStartedFuture.wait();
+
+		auto blocker = submitBlockingTask(*pool_);
 
         // Ensure that the task queue popped the added task.
         Assert::AreEqual(static_cast<std::size_t>(0), pool_->getQueueSize());
 
         // Cleanup: release the blocked worker so the pool can shut down cleanly.
-        releaseWorker.set_value();
+        blocker.releaseWorker.set_value();
     }
 
     TEST_METHOD(MultipleTasksAllCompleteCorrectly)
@@ -221,22 +218,24 @@ public:
     {
         // Create a pool with 1 thread and max 2 tasks so that it easily backs up.
         ThreadPool pool(1, 2);
+
+		auto blocked = submitBlockingTask(pool);
         
-		// Create a promise and future to control when the first task completes.
-        std::promise<void> releaseWorker;
-        std::shared_future<void> releaseSignal = releaseWorker.get_future();
+		//// Create a promise and future to control when the first task completes.
+  //      std::promise<void> releaseWorker;
+  //      std::shared_future<void> releaseSignal = releaseWorker.get_future();
 
-        std::promise<void> workerStarted;
-        std::shared_future<void> workerStartedFuture = workerStarted.get_future();
+  //      std::promise<void> workerStarted;
+  //      std::shared_future<void> workerStartedFuture = workerStarted.get_future();
 
-        // Occupy the only worker thread and block it.
-        auto blocker = pool.submit([releaseSignal, &workerStarted] {
-			workerStarted.set_value();
-            // Blocks until the test releases it.
-            releaseSignal.wait();   
-        });
+  //      // Occupy the only worker thread and block it.
+  //      auto blocker = pool.submit([releaseSignal, &workerStarted] {
+		//	workerStarted.set_value();
+  //          // Blocks until the test releases it.
+  //          releaseSignal.wait();   
+  //      });
 
-		workerStartedFuture.wait();
+		//workerStartedFuture.wait();
 
         // Fill up the queue with trivial tasks.
         auto t2 = pool.submit([] { return 1; });
@@ -253,23 +252,24 @@ public:
         Assert::IsFalse(t4.has_value());
 
         // Cleanup: release the blocked worker so the pool can shut down cleanly
-        releaseWorker.set_value();
+        blocked.releaseWorker.set_value();
     }
 
     TEST_METHOD(Metrics)
     {
         ThreadPool pool(1, 1);
+		auto blocked = submitBlockingTask(pool);
 
-        std::promise<void> workerStarted;
-        auto workerStartedFuture = workerStarted.get_future();
-        std::promise<void> releaseWorker;
-        std::shared_future<void> releaseSignal = releaseWorker.get_future();
+        //std::promise<void> workerStarted;
+        //auto workerStartedFuture = workerStarted.get_future();
+        //std::promise<void> releaseWorker;
+        //std::shared_future<void> releaseSignal = releaseWorker.get_future();
 
-        auto blocker = pool.submit([releaseSignal, &workerStarted] {
-            workerStarted.set_value();
-            releaseSignal.wait();
-            });
-        workerStartedFuture.wait();
+        //auto blocker = pool.submit([releaseSignal, &workerStarted] {
+        //    workerStarted.set_value();
+        //    releaseSignal.wait();
+        //    });
+        //workerStartedFuture.wait();
 
         // Add a task to the queue to fill it.
         auto t2 = pool.submit([] { return 1; });
@@ -280,13 +280,14 @@ public:
         Assert::IsTrue(t2.has_value());
         Assert::IsFalse(t3.has_value());
 
-        // Ensure t2 actually completes before checking the counters.
-        releaseWorker.set_value();
+        // Release the first task to allow t2 to also complete.
+        blocked.releaseWorker.set_value();
+        blocked.future->get();
         t2->get();
 
         Assert::AreEqual(static_cast<std::uint64_t>(2), pool.getTasksSubmitted());
         Assert::AreEqual(static_cast<std::uint64_t>(1), pool.getTasksRejected());
-		Assert::AreEqual(static_cast<std::uint64_t>(1), pool.getTasksCompleted());
+		Assert::AreEqual(static_cast<std::uint64_t>(2), pool.getTasksCompleted());
     }
 };
 

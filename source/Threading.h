@@ -92,7 +92,7 @@ private:
 // This method allows users to submit tasks to the thread pool and returns a future that can 
 // be used to retrieve the result of the task once it has been executed by a worker thread.
 template<typename F, typename... F_Args>
-auto ThreadPool::submit(F&& f, F_Args&&... args) 
+auto ThreadPool::submit(F&& f, F_Args&&... f_args) 
 	-> std::optional<std::future<std::invoke_result_t<F, F_Args...>>>
 {
 	// Alias the return type of the callable F with arguments Args... for convenience.
@@ -106,9 +106,9 @@ auto ThreadPool::submit(F&& f, F_Args&&... args)
 		// Use std::forward to preserve the value category (lvalue/rvalue) of the arguments, 
 		// i.e., perfect forwarding. Use mutable because the lambda capture-by-value adds 
 		// const qualifiers by default.
-		[f = std::forward<F>(f), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+		[f = std::forward<F>(f), f_args = std::make_tuple(std::forward<F_Args>(f_args)...)]() mutable {
 			// Uniform way to call the callable with its arguments.
-			std::apply(f, args);
+			return std::apply(f, f_args);
 		}
 	);
 
