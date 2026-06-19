@@ -255,6 +255,39 @@ public:
         // Cleanup: release the blocked worker so the pool can shut down cleanly
         releaseWorker.set_value();
     }
+
+    TEST_METHOD(Metrics)
+    {
+        ThreadPool pool(1, 1);
+
+        std::promise<void> workerStarted;
+        auto workerStartedFuture = workerStarted.get_future();
+        std::promise<void> releaseWorker;
+        std::shared_future<void> releaseSignal = releaseWorker.get_future();
+
+        auto blocker = pool.submit([releaseSignal, &workerStarted] {
+            workerStarted.set_value();
+            releaseSignal.wait();
+            });
+        workerStartedFuture.wait();
+
+        // Add a task to the queue to fill it.
+        auto t2 = pool.submit([] { return 1; });
+        // Adding another task should lead to a rejection.
+        auto t3 = pool.submit([] { return 2; });
+
+		// Check that t2 was accepted and t3 was rejected.
+        Assert::IsTrue(t2.has_value());
+        Assert::IsFalse(t3.has_value());
+
+        // Ensure t2 actually completes before checking the counters.
+        releaseWorker.set_value();
+        t2->get();
+
+        Assert::AreEqual(static_cast<std::uint64_t>(2), pool.getTasksSubmitted());
+        Assert::AreEqual(static_cast<std::uint64_t>(1), pool.getTasksRejected());
+		Assert::AreEqual(static_cast<std::uint64_t>(1), pool.getTasksCompleted());
+    }
 };
 
 // Define static member variables.

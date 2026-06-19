@@ -65,5 +65,8 @@ void ThreadPool::workerLoop() {
 
 		// Execute the task outside of the lock to allow other threads to access the queue.
 		work();
+
+		// Increment the completed tasks counter after executing the task.
+		tasksCompleted_.fetch_add(1, std::memory_order_relaxed);
 	}
 }

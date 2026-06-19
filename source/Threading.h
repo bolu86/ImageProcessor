@@ -11,6 +11,11 @@
 #include <thread>
 #include <type_traits>
 
+// TODO:
+// - Task priorities, by using a std::priority_queue for the tasks.
+// - Task timeouts + watchdog for handling stuck tasks.
+// - forceShutDown() member function for hard stops?
+
 class ThreadPool {
 public:
 	// Constructor.
@@ -42,19 +47,26 @@ public:
 	// This is not thread-safe and may be inaccurate, 
 	// but it can be useful for monitoring or 
 	// debugging purposes.
-	inline std::size_t getQueueSize() const {
+	std::size_t getQueueSize() const {
 		std::lock_guard<std::mutex> lock(mutex_);
 		return tasks_.size();
 	}
 
 	// Trivial getters
-	inline std::size_t getNumThreads() const { return workers_.size(); }
-	inline std::size_t getMaxQueueSize() const { return maxQueueSize_; }
-	inline bool isStopping() const { return stopping_; }
+	std::size_t getNumThreads() const { return workers_.size(); }
+	std::size_t getMaxQueueSize() const { return maxQueueSize_; }
+	bool isStopping() const { return stopping_; }
+	std::uint64_t getTasksSubmitted() const { return tasksSubmitted_.load(); }
+	std::uint64_t getTasksRejected() const { return tasksRejected_.load(); }
+	std::uint64_t getTasksCompleted() const { return tasksCompleted_.load(); }
 
 
 private:
 	void workerLoop();
+
+	// Mutex and condition variable
+	mutable std::mutex mutex_;
+	std::condition_variable cv_;
 
 	// Worker threads
 	std::vector<std::thread> workers_;
@@ -68,9 +80,10 @@ private:
 	// Flag to stop the pool
 	bool stopping_{ false };
 
-	// Mutex and condition variable
-	mutable std::mutex mutex_;
-	std::condition_variable cv_;
+	// Metrics
+	std::atomic<std::uint64_t> tasksSubmitted_{ 0 };
+	std::atomic<std::uint64_t> tasksRejected_{ 0 };
+	std::atomic<std::uint64_t> tasksCompleted_{ 0 };
 };
 
 // ----------------------------------------------------------------------------
@@ -112,10 +125,13 @@ auto ThreadPool::submit(F&& f, F_Args&&... args)
 		if (stopping_)
 			throw std::runtime_error("submit() called on a stopped ThreadPool");
 
-		if (tasks_.size() >= maxQueueSize_)
-			// Fail fast if queue is full. Let caller handle what to do, 
-			// e.g. drop data.
+		if (tasks_.size() >= maxQueueSize_) {
+			// Track the rejected task for metrics purposes.
+			tasksRejected_.fetch_add(1, std::memory_order_relaxed);
+
+			// Fail fast if queue is full. Let caller handle what to do, e.g. drop data.
 			return std::nullopt;
+		}
 
 		// Wrap the task pointer in a type-erased void() lambda to match the element type of the queue.
 		// Any return value of (*task)() is discarded since it is not needed in that way.
@@ -126,6 +142,9 @@ auto ThreadPool::submit(F&& f, F_Args&&... args)
 
 	// Wake up any one worker thread to  there is a new task to take.
 	cv_.notify_one();
+
+	// Track the submitted task for metrics purposes.
+	tasksSubmitted_.fetch_add(1, std::memory_order_relaxed);
 
 	return future;
 }
