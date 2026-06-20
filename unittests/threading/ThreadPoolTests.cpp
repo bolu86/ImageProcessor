@@ -1,7 +1,10 @@
 #include "pch.h"
 
 // Class to be tested
-#include "Threading.h"
+#include "threading\ThreadPool.h"
+
+using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace std::literals::chrono_literals;
 
 // Compile-time checks
 // Test class contracts (non-copyable, non-movable).
@@ -22,13 +25,10 @@ static_assert(
     "ThreadPool must not be move assignable"
     );
 
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-using namespace std::literals::chrono_literals;
-
 // ----------------------------------------------------------------------------
 // ThreadPoolTests
 // ----------------------------------------------------------------------------
-TEST_CLASS(ThreadingTests)
+TEST_CLASS(ThreadPoolTests)
 {
 private:
     static std::size_t hardwareConcurrency_;
@@ -48,6 +48,7 @@ public:
 		// Reset the pool to ensure it is destroyed before the next test starts.
 		pool_.reset();
     }
+
     TEST_METHOD(Construction) 
     {   
 		// Test class contracts (non-copyable, non-movable).
@@ -90,23 +91,6 @@ public:
 
     TEST_METHOD(QueueEmptiesOnWorkerTakingTask)
     {
-  //      std::promise<void> releaseWorker;
-  //      std::shared_future<void> releaseSignal = releaseWorker.get_future();
-  //          
-		//// Use a similar promise/future method to ensure the worker thread has started 
-  //      // and is blocked on the releaseSignal before we check the queue size.
-  //      std::promise<void> workerStarted;
-  //      std::shared_future<void> workerStartedFuture = workerStarted.get_future();
-
-  //      auto blocker = pool_->submit([releaseSignal, &workerStarted] {
-  //          // Signal that the worker has started.
-  //          workerStarted.set_value();
-  //          // Block the thread execution.
-  //          releaseSignal.wait();
-  //      });
-
-  //      workerStartedFuture.wait();
-
 		auto blocker = submitBlockingTask(*pool_);
 
         // Ensure that the task queue popped the added task.
@@ -220,22 +204,6 @@ public:
         ThreadPool pool(1, 2);
 
 		auto blocked = submitBlockingTask(pool);
-        
-		//// Create a promise and future to control when the first task completes.
-  //      std::promise<void> releaseWorker;
-  //      std::shared_future<void> releaseSignal = releaseWorker.get_future();
-
-  //      std::promise<void> workerStarted;
-  //      std::shared_future<void> workerStartedFuture = workerStarted.get_future();
-
-  //      // Occupy the only worker thread and block it.
-  //      auto blocker = pool.submit([releaseSignal, &workerStarted] {
-		//	workerStarted.set_value();
-  //          // Blocks until the test releases it.
-  //          releaseSignal.wait();   
-  //      });
-
-		//workerStartedFuture.wait();
 
         // Fill up the queue with trivial tasks.
         auto t2 = pool.submit([] { return 1; });
@@ -260,17 +228,6 @@ public:
         ThreadPool pool(1, 1);
 		auto blocked = submitBlockingTask(pool);
 
-        //std::promise<void> workerStarted;
-        //auto workerStartedFuture = workerStarted.get_future();
-        //std::promise<void> releaseWorker;
-        //std::shared_future<void> releaseSignal = releaseWorker.get_future();
-
-        //auto blocker = pool.submit([releaseSignal, &workerStarted] {
-        //    workerStarted.set_value();
-        //    releaseSignal.wait();
-        //    });
-        //workerStartedFuture.wait();
-
         // Add a task to the queue to fill it.
         auto t2 = pool.submit([] { return 1; });
         // Adding another task should lead to a rejection.
@@ -292,4 +249,4 @@ public:
 };
 
 // Define static member variables.
-std::size_t ThreadingTests::hardwareConcurrency_{ 0 };
+std::size_t ThreadPoolTests::hardwareConcurrency_{ 0 };

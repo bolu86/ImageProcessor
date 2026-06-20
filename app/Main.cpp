@@ -1,5 +1,5 @@
 #include <chrono>
-#include "Threading.h"
+#include "threading\ThreadPool.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -7,6 +7,10 @@ int main()
 {
 	std::size_t numThreads = std::thread::hardware_concurrency();
 	std::cout << "Cores: " << numThreads << std::endl;
+
+	//Pipeline pipeline(collectImagePaths("input_folder"), "output_folder", /*queueCapacity=*/8);
+	//pipeline.run();
+
 	ThreadPool pool(numThreads, 10);
 
 	auto f1 = pool.submit([]() {

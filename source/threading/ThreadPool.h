@@ -16,6 +16,10 @@
 // - Task timeouts + watchdog for handling stuck tasks.
 // - forceShutDown() member function for hard stops?
 
+// ----------------------------------------------------------------------------
+// ThreadPool
+// ----------------------------------------------------------------------------
+// A bounded queue, fail-fast thread pool implementation.
 class ThreadPool {
 public:
 	// Constructor.

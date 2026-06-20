@@ -142,10 +142,23 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Threading.cpp" />
+    <ClCompile Include="image\ImageIO.cpp" />
+    <ClCompile Include="image\ImageProcessingAlgorithms.cpp" />
+    <ClCompile Include="pipeline\Pipeline.cpp" />
+    <ClCompile Include="pipeline\PipelineStages.cpp" />
+    <ClCompile Include="threading\ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Threading.h" />
+    <ClInclude Include="image\Image.h" />
+    <ClInclude Include="image\ImageIO.h" />
+    <ClInclude Include="image\ImageProcessingAlgorithms.h" />
+    <ClInclude Include="pipeline\Pipeline.h" />
+    <ClInclude Include="pipeline\PipelineQueue.h" />
+    <ClInclude Include="pipeline\PipelineStage.h" />
+    <ClInclude Include="pipeline\PipelineStages.h" />
+    <ClInclude Include="third_party\stb_image.h" />
+    <ClInclude Include="third_party\stb_image_write.h" />
+    <ClInclude Include="threading\ThreadPool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

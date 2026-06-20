@@ -13,18 +13,75 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\image">
+      <UniqueIdentifier>{b184e556-9c24-4f66-8ffa-f2ffaa5848db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{2e0d59a6-7c77-42a4-b685-f495a0a0181f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\pipeline">
+      <UniqueIdentifier>{0b549ae8-f782-4cf7-9c8c-43b527992deb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\threading">
+      <UniqueIdentifier>{3b4ffa49-02b6-463e-b613-910f2c336447}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pipeline">
+      <UniqueIdentifier>{ae78dde1-ae80-4fb7-a3a9-bb212ace2a29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\threading">
+      <UniqueIdentifier>{a526c852-5f01-4be1-82b1-268357cfcd6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\third_party">
+      <UniqueIdentifier>{e5418e34-7dd6-4b9d-9e92-361f223ff72c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="image\ImageIO.cpp">
+      <Filter>Source Files\image</Filter>
     </ClCompile>
-    <ClCompile Include="Threading.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="image\ImageProcessingAlgorithms.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\ThreadPool.cpp">
+      <Filter>Source Files\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="pipeline\Pipeline.cpp">
+      <Filter>Source Files\pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="pipeline\PipelineStages.cpp">
+      <Filter>Source Files\pipeline</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Threading.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="image\Image.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="image\ImageIO.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="image\ImageProcessingAlgorithms.h">
+      <Filter>Header Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="pipeline\Pipeline.h">
+      <Filter>Header Files\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="pipeline\PipelineQueue.h">
+      <Filter>Header Files\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="pipeline\PipelineStage.h">
+      <Filter>Header Files\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="pipeline\PipelineStages.h">
+      <Filter>Header Files\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="threading\ThreadPool.h">
+      <Filter>Header Files\threading</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\stb_image.h">
+      <Filter>Header Files\third_party</Filter>
+    </ClInclude>
+    <ClInclude Include="third_party\stb_image_write.h">
+      <Filter>Header Files\third_party</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

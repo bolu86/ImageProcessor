@@ -13,13 +13,25 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{957d4432-375f-4b51-801f-025fd4e92a83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pipeline">
+      <UniqueIdentifier>{815b5c03-ab74-442d-a778-b83b1b331d0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\threading">
+      <UniqueIdentifier>{6f3665a3-4b16-4513-a303-ecf6d5693db0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ThreadingTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threading\ThreadPoolTests.cpp">
+      <Filter>Source Files\threading</Filter>
+    </ClCompile>
+    <ClCompile Include="image\ImageIOTests.cpp">
+      <Filter>Source Files\image</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
