@@ -142,6 +142,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="image\Image.cpp" />
     <ClCompile Include="image\ImageIO.cpp" />
     <ClCompile Include="image\ImageProcessingAlgorithms.cpp" />
     <ClCompile Include="pipeline\Pipeline.cpp" />

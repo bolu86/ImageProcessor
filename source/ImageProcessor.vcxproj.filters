@@ -51,6 +51,9 @@
     <ClCompile Include="pipeline\PipelineStages.cpp">
       <Filter>Source Files\pipeline</Filter>
     </ClCompile>
+    <ClCompile Include="image\Image.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="image\Image.h">
