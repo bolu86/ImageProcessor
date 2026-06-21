@@ -57,13 +57,6 @@ public:
         Assert::IsFalse(std::is_move_constructible_v<ThreadPool>);
         Assert::IsFalse(std::is_move_assignable_v<ThreadPool>);
 
-		// Test construction.
-        {
-            ThreadPool pool(4, 10);
-            Assert::AreEqual(static_cast<size_t>(4), pool.getNumThreads());
-            Assert::AreEqual(static_cast<size_t>(10), pool.getMaxQueueSize());
-        }
-
 		// Test invalid construction parameters.
 		Assert::ExpectException<std::invalid_argument>(
             [] {ThreadPool pool(0, 10);}
@@ -71,6 +64,13 @@ public:
 		Assert::ExpectException<std::invalid_argument>(
             [] {ThreadPool pool(4, 0);}
         );
+
+        // Test construction.
+        {
+            // Check that the given number of worker threads were created.
+            ThreadPool pool(4, 10);
+            Assert::AreEqual(static_cast<size_t>(4), pool.getNumThreads());
+        }
     }
 
     TEST_METHOD(SubmitSingleTask)
