@@ -22,12 +22,14 @@ public:
         // Create a temporary folder for the test.
         TemporaryTestFolder temp_folder;
 
+        auto checkAndGet = [](std::variant<Image, LoadError> im) {
+            Assert::IsTrue(std::holds_alternative<Image>(im));
+            return std::get<Image>(im);
+        };
+
         // Test loading a valid image.
         auto loaded = ImageIO::load(globalTestFile("image0.png").string());
-        Assert::IsTrue(std::holds_alternative<Image>(loaded));
-
-        // Get the loaded image.
-        Image loaded_image = std::get<Image>(loaded);
+        Image loaded_image = checkAndGet(loaded);
 
         // Test saving the loaded image.
         auto saved_path = temp_folder.path() / "saved.png";
@@ -36,10 +38,7 @@ public:
 
         // Test reloading the saved image.
         auto reloaded = ImageIO::load(saved_path.string());
-        Assert::IsTrue(std::holds_alternative<Image>(reloaded));
-
-        // Get the reloaded image.
-        Image reloaded_image = std::get<Image>(reloaded);
+        Image reloaded_image = checkAndGet(reloaded);
 
         // Check the reloaded image by comparing with the initial loaded image.
         Assert::AreEqual(loaded_image.width, reloaded_image.width);

@@ -52,8 +52,12 @@ inline std::filesystem::path globalTestFile(const std::string& rel_path) {
 }
 
 // localTestFile
-// Return the path to a given test file in the local folder of the calling test function's file.
-inline std::filesystem::path localTestFile(const std::string& calling_file, const std::string& rel_path) {
+// Return the path to a given test file in the local TestFiles folder of the 
+// calling test function's file.
+inline std::filesystem::path localTestFile(
+    const std::string& calling_file, 
+    const std::string& rel_path
+) {
     return std::filesystem::path(calling_file).parent_path() / "TestFiles" / rel_path;
 }
 
