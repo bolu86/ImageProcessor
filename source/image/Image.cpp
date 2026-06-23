@@ -4,7 +4,7 @@ Image makeImageFromRawBuffer(
     std::size_t width,
     std::size_t height,
     std::size_t channels,
-    std::string source_path,
+    std::filesystem::path source_path,
     const unsigned char* raw_data
 )
 {

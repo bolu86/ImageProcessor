@@ -14,7 +14,7 @@ namespace ImageIO {
     // load
     // ----------------------------------------------------------------------------
     std::variant<Image, ErrorMsg> load(
-        const std::string& path
+        const std::filesystem::path& path
     )
     {
         int width{}, height{};
@@ -26,7 +26,7 @@ namespace ImageIO {
 
         // Read raw image data into memory.
         unsigned char* raw_data = stbi_load(
-            path.c_str(),
+            path.string().c_str(),
             &width,
             &height,
             &channels_in_file,
@@ -56,13 +56,13 @@ namespace ImageIO {
     // ----------------------------------------------------------------------------
     std::optional<ErrorMsg> savePng(
         const Image& image,
-        const std::string& path
+        const std::filesystem::path& path
     )
     {
         const int stride_in_bytes = image.width * image.channels;
 
         int result = stbi_write_png(
-            path.c_str(),
+            path.string().c_str(),
             image.width,
             image.height,
             image.channels,

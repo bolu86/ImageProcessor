@@ -270,7 +270,13 @@ public:
 
         // Create an Image for testing.
         std::vector<unsigned char> raw_buffer(100 * 100 * 3, 128);
-        Image img = makeImageFromRawBuffer(100, 100, 3, "test", raw_buffer.data());
+        Image img = makeImageFromRawBuffer(
+            100, 
+            100, 
+            3, 
+            std::filesystem::path("test"), 
+            raw_buffer.data()
+        );
 
         // Capture pixel data address before move, to verify no copy occurred.
         const unsigned char* original_data = img.pixels.data();
@@ -284,7 +290,7 @@ public:
         Assert::AreEqual(std::size_t(100), popped->width);
         Assert::AreEqual(std::size_t(100), popped->height);
         Assert::AreEqual(std::size_t(3), popped->channels);
-        Assert::AreEqual(std::string("test"), popped->source_path);
+        Assert::AreEqual(std::string("test"), popped->source_path.string());
 
         // After a move, the popped item's pixel buffer should be the same
         // heap allocation as the original, not a copy.

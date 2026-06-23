@@ -19,7 +19,7 @@ public:
     TEST_METHOD(MakeImageFromRawBuffer) 
     {
         size_t w{ 1 }, h{ 2 }, n_ch{ 3 };
-        std::string path = "some_path";
+        std::filesystem::path path{ "some_path" };
         size_t byte_count = w * h * n_ch;
         std::vector<unsigned char> ref_vec(byte_count, 'a');
         const unsigned char* test_data = ref_vec.data();
@@ -29,7 +29,7 @@ public:
         Assert::AreEqual(static_cast<std::size_t>(1), result.width);
         Assert::AreEqual(static_cast<std::size_t>(2), result.height);
         Assert::AreEqual(static_cast<std::size_t>(3), result.channels);
-        Assert::AreEqual(std::string("some_path"), result.source_path);
+        Assert::AreEqual(std::string("some_path"), result.source_path.string());
         Assert::IsTrue(ref_vec == result.pixels);
     }
 };

@@ -1,6 +1,7 @@
 #pragma once
-#include <vector>
+#include <filesystem>
 #include <string>
+#include <vector>
 
 // ----------------------------------------------------------------------------
 // Image
@@ -13,7 +14,7 @@ struct Image {
     std::size_t channels{};
 
     // File path
-    std::string source_path;
+    std::filesystem::path source_path;
 
     // Image pixel data
     std::vector<unsigned char> pixels;
@@ -27,6 +28,6 @@ Image makeImageFromRawBuffer(
     std::size_t width,
     std::size_t height,
     std::size_t channels,
-    std::string source_path,
+    std::filesystem::path source_path,
     const unsigned char* raw_data
 );

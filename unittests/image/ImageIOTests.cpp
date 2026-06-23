@@ -28,16 +28,16 @@ public:
             };
 
         // Test loading a valid image.
-        auto loaded = ImageIO::load(globalTestFile("image0.png").string());
+        auto loaded = ImageIO::load(globalTestFile("image0.png"));
         Image loaded_image = checkAndGet(loaded);
 
         // Test saving the loaded image.
         auto saved_path = temp_folder.path() / "saved.png";
-        auto saved = ImageIO::savePng(loaded_image, saved_path.string());
+        auto saved = ImageIO::savePng(loaded_image, saved_path);
         Assert::IsFalse(saved.has_value());
 
         // Test reloading the saved image.
-        auto reloaded = ImageIO::load(saved_path.string());
+        auto reloaded = ImageIO::load(saved_path);
         Image reloaded_image = checkAndGet(reloaded);
 
         // Check the reloaded image by comparing with the initial loaded image.
@@ -47,7 +47,7 @@ public:
 
     TEST_METHOD(LoadNonexistentFileReturnsNullopt)
     {
-        std::string path = "this_file_does_not_exist.png";
+        std::filesystem::path path{ "this_file_does_not_exist.png" };
 
         // Test loading a non-existant file.
         auto loaded = ImageIO::load(path);
