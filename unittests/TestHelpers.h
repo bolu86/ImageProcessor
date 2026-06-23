@@ -112,3 +112,20 @@ private:
     // The temporary folder path
     std::filesystem::path path_;
 };
+
+class ThreadGuard
+{
+public:
+    explicit ThreadGuard(std::thread& t) : thread_(t) {}
+    ~ThreadGuard()
+    {
+        if (thread_.joinable())
+            thread_.join();
+    }
+
+    ThreadGuard(const ThreadGuard&) = delete;
+    ThreadGuard& operator=(const ThreadGuard&) = delete;
+
+private:
+    std::thread& thread_;
+};

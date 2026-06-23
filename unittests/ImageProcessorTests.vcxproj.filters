@@ -36,6 +36,9 @@
     <ClCompile Include="image\ImageTests.cpp">
       <Filter>Source Files\image</Filter>
     </ClCompile>
+    <ClCompile Include="pipeline\PipelineQueueTests.cpp">
+      <Filter>Source Files\pipeline</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
