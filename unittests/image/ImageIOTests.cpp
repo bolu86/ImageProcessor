@@ -22,10 +22,10 @@ public:
         // Create a temporary folder for the test.
         TemporaryTestFolder temp_folder;
 
-        auto checkAndGet = [](std::variant<Image, LoadError> im) {
+        auto checkAndGet = [](std::variant<Image, ImageIO::ErrorMsg> im) {
             Assert::IsTrue(std::holds_alternative<Image>(im));
             return std::get<Image>(im);
-        };
+            };
 
         // Test loading a valid image.
         auto loaded = ImageIO::load(globalTestFile("image0.png").string());
@@ -33,8 +33,8 @@ public:
 
         // Test saving the loaded image.
         auto saved_path = temp_folder.path() / "saved.png";
-        bool saved = ImageIO::savePng(loaded_image, saved_path.string());
-        Assert::IsTrue(saved);
+        auto saved = ImageIO::savePng(loaded_image, saved_path.string());
+        Assert::IsFalse(saved.has_value());
 
         // Test reloading the saved image.
         auto reloaded = ImageIO::load(saved_path.string());
@@ -51,11 +51,10 @@ public:
 
         // Test loading a non-existant file.
         auto loaded = ImageIO::load(path);
-        Assert::IsTrue(std::holds_alternative<LoadError>(loaded));
+        Assert::IsTrue(std::holds_alternative<ImageIO::ErrorMsg>(loaded));
 
-        // Check the LoadError object.
-        LoadError err = std::get<LoadError>(loaded);
-        Assert::AreEqual(path, err.path);
-        Assert::AreEqual(std::string("can't fopen"), err.reason);
+        // Check the ImageIO::LoadError object.
+        ImageIO::ErrorMsg err = std::get<ImageIO::ErrorMsg>(loaded);
+        Assert::AreEqual(std::string("can't fopen"), err);
     }
 };

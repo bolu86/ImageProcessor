@@ -2,6 +2,9 @@
 #include <vector>
 #include <string>
 
+// ----------------------------------------------------------------------------
+// Image
+// ----------------------------------------------------------------------------
 // Container for representing a loaded image in memory.
 struct Image {
     // Image properties
@@ -16,6 +19,9 @@ struct Image {
     std::vector<unsigned char> pixels;
 };
 
+// ----------------------------------------------------------------------------
+// makeImageFromRawBuffer
+// ----------------------------------------------------------------------------
 // Create an image container for a successfully loaded image.
 Image makeImageFromRawBuffer(
     std::size_t width,

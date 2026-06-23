@@ -13,30 +13,29 @@ namespace ImageIO {
 
     // load
     // ----------------------------------------------------------------------------
-    std::variant<Image, LoadError> load(const std::string& path)
+    std::variant<Image, ErrorMsg> load(
+        const std::string& path
+    )
     {
         int width{}, height{};
         [[maybe_unused]] int channels_in_file{};
 
         // Force 3 channels (RGB), discarding any alpha channel, so every
         // loaded image has a consistent, known channel count downstream.
-        int desired_channels{3};
+        int desired_channels{ 3 };
 
         // Read raw image data into memory.
         unsigned char* raw_data = stbi_load(
-            path.c_str(), 
-            &width, 
-            &height, 
+            path.c_str(),
+            &width,
+            &height,
             &channels_in_file,
             desired_channels
         );
 
         // Handle load errors.
         if (raw_data == nullptr) {
-            return LoadError{
-                path,
-                stbi_failure_reason()
-            };
+            return ErrorMsg(stbi_failure_reason());
         }
 
         Image image = makeImageFromRawBuffer(
@@ -55,7 +54,10 @@ namespace ImageIO {
 
     // savePng
     // ----------------------------------------------------------------------------
-    bool savePng(const Image& image, const std::string& path)
+    std::optional<ErrorMsg> savePng(
+        const Image& image,
+        const std::string& path
+    )
     {
         const int stride_in_bytes = image.width * image.channels;
 
@@ -68,7 +70,9 @@ namespace ImageIO {
             stride_in_bytes
         );
 
-        return result != 0;
-    }
+        if (result == 0)
+            return ErrorMsg("Could not save image");
 
+        return std::nullopt;
+    }
 }
