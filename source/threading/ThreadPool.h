@@ -26,7 +26,7 @@ public:
 	// It is explicit to prevent implicit conversions, ensuring that 
 	// input parameters are always specified when creating a 
 	// ThreadPool instance.
-	explicit ThreadPool(std::size_t numThreads, std::size_t maxQueueSize);
+	explicit ThreadPool(std::size_t num_threads, std::size_t max_queue_size);
 	~ThreadPool();
 
 	// Template method to submit tasks to the thread pool. It accepts any type of callable and 
@@ -55,14 +55,17 @@ public:
 		std::lock_guard<std::mutex> lock(mutex_);
 		return tasks_.size();
 	}
+	bool isStopping() const { 
+		std::lock_guard<std::mutex> lock(mutex_);
+		return stopping_; 
+	}
 
 	// Trivial getters
 	std::size_t getNumThreads() const { return workers_.size(); }
-	std::size_t getMaxQueueSize() const { return maxQueueSize_; }
-	bool isStopping() const { return stopping_; }
-	std::uint64_t getTasksSubmitted() const { return tasksSubmitted_.load(); }
-	std::uint64_t getTasksRejected() const { return tasksRejected_.load(); }
-	std::uint64_t getTasksCompleted() const { return tasksCompleted_.load(); }
+	std::size_t getMaxQueueSize() const { return max_queue_size_; }
+	std::uint64_t getTasksSubmitted() const { return tasks_submitted_.load(); }
+	std::uint64_t getTasksRejected() const { return tasks_rejected_.load(); }
+	std::uint64_t getTasksCompleted() const { return tasks_completed_.load(); }
 
 
 private:
@@ -79,15 +82,15 @@ private:
 	std::queue<std::function<void()>> tasks_;
 
 	// Max tasks to accept, for handling back-pressure under high load.
-	std::size_t maxQueueSize_{};
+	std::size_t max_queue_size_{};
 
 	// Flag to stop the pool
 	bool stopping_{ false };
 
 	// Metrics
-	std::atomic<std::uint64_t> tasksSubmitted_{ 0 };
-	std::atomic<std::uint64_t> tasksRejected_{ 0 };
-	std::atomic<std::uint64_t> tasksCompleted_{ 0 };
+	std::atomic<std::uint64_t> tasks_submitted_{ 0 };
+	std::atomic<std::uint64_t> tasks_rejected_{ 0 };
+	std::atomic<std::uint64_t> tasks_completed_{ 0 };
 };
 
 // ----------------------------------------------------------------------------
@@ -129,9 +132,9 @@ auto ThreadPool::submit(F&& f, F_Args&&... f_args)
 		if (stopping_)
 			throw std::runtime_error("submit() called on a stopped ThreadPool");
 
-		if (tasks_.size() >= maxQueueSize_) {
+		if (tasks_.size() >= max_queue_size_) {
 			// Track the rejected task for metrics purposes.
-			tasksRejected_.fetch_add(1, std::memory_order_relaxed);
+			tasks_rejected_.fetch_add(1, std::memory_order_relaxed);
 
 			// Fail fast if queue is full. Let caller handle what to do, e.g. drop data.
 			return std::nullopt;
@@ -148,7 +151,7 @@ auto ThreadPool::submit(F&& f, F_Args&&... f_args)
 	cv_.notify_one();
 
 	// Track the submitted task for metrics purposes.
-	tasksSubmitted_.fetch_add(1, std::memory_order_relaxed);
+	tasks_submitted_.fetch_add(1, std::memory_order_relaxed);
 
 	return future;
 }

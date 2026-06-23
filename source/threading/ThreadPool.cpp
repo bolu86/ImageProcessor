@@ -2,19 +2,19 @@
 
 // Constructor
 // ----------------------------------------------------------------------------
-ThreadPool::ThreadPool(std::size_t numThreads, std::size_t maxQueueSize)
-	: maxQueueSize_(maxQueueSize) 
+ThreadPool::ThreadPool(std::size_t num_threads, std::size_t max_queue_size)
+	: max_queue_size_(max_queue_size)
 {	
 	// Input checks.
-	if (numThreads == 0)
+	if (num_threads == 0)
 		throw std::invalid_argument("ThreadPool must be created with at least one thread.");
-	if (maxQueueSize == 0)
+	if (max_queue_size == 0)
 		throw std::invalid_argument("ThreadPool must be created with a valid queue size.");
 
 	// Fill up the worker container with the specified number of threads, 
 	// each running the workerLoop method.
-	workers_.reserve(numThreads);
-	for (std::size_t i = 0; i < numThreads; ++i) {
+	workers_.reserve(num_threads);
+	for (std::size_t i = 0; i < num_threads; ++i) {
 		workers_.emplace_back(&ThreadPool::workerLoop, this);
 	}
 }
@@ -67,6 +67,6 @@ void ThreadPool::workerLoop() {
 		work();
 
 		// Increment the completed tasks counter after executing the task.
-		tasksCompleted_.fetch_add(1, std::memory_order_relaxed);
+		tasks_completed_.fetch_add(1, std::memory_order_relaxed);
 	}
 }

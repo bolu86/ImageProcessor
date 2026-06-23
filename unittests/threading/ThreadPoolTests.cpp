@@ -30,19 +30,15 @@ static_assert(
 // ----------------------------------------------------------------------------
 TEST_CLASS(ThreadPoolTests)
 {
-private:
-    static std::size_t hardwareConcurrency_;
-    std::unique_ptr<ThreadPool> pool_;
-
 public:
     TEST_CLASS_INITIALIZE(ClassSetup) {
         // Fetch the hardware concurrency once and ensure it is a valid value.
-        hardwareConcurrency_ = std::max<std::size_t>(1, std::thread::hardware_concurrency());
+        hardware_concurrency_ = std::max<std::size_t>(1, std::thread::hardware_concurrency());
     }
     //TEST_CLASS_CLEANUP(ClassTeardown) {}
     TEST_METHOD_INITIALIZE(MethodSetup) {
         // Default ThreadPool test instance.
-        pool_ = std::make_unique<ThreadPool>(hardwareConcurrency_, 1000);
+        pool_ = std::make_unique<ThreadPool>(hardware_concurrency_, 1000);
     }
     TEST_METHOD_CLEANUP(MethodTeardown) {
 		// Reset the pool to ensure it is destroyed before the next test starts.
@@ -132,7 +128,7 @@ public:
 		// Use a large task queue to avoid hitting the max queue size limit 
         // during this test, which would cause tasks to be dropped and lead 
         // to false negatives.
-        ThreadPool pool(hardwareConcurrency_, 2000);
+        ThreadPool pool(hardware_concurrency_, 2000);
         std::vector<std::optional<std::future<void>>> futures;
 		
         // Use atomic int for thread-safe counting (ensures no race conditions
@@ -246,7 +242,11 @@ public:
         Assert::AreEqual(static_cast<std::uint64_t>(1), pool.getTasksRejected());
 		Assert::AreEqual(static_cast<std::uint64_t>(2), pool.getTasksCompleted());
     }
+
+private:
+    static std::size_t hardware_concurrency_;
+    std::unique_ptr<ThreadPool> pool_;
 };
 
-// Define static member variables.
-std::size_t ThreadPoolTests::hardwareConcurrency_{ 0 };
+// Define static member variable default values.
+std::size_t ThreadPoolTests::hardware_concurrency_{ 0 };
