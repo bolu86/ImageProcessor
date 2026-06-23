@@ -182,6 +182,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="pipeline\PipelineQueueTests.cpp" />
+    <ClCompile Include="pipeline\PipelineStagesTests.cpp" />
+    <ClCompile Include="pipeline\PipelineTests.cpp" />
     <ClCompile Include="threading\ThreadPoolTests.cpp" />
   </ItemGroup>
   <ItemGroup>

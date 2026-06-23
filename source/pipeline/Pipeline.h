@@ -1,23 +1,52 @@
 #pragma once
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
+
+// Local includes
+#include "../image/Image.h"
+#include "PipelineQueue.h"
+#include "PipelineStages.h"
+
 
 // ----------------------------------------------------------------------------
 // Pipeline
 // ----------------------------------------------------------------------------
 class Pipeline {
 public:
-    Pipeline(std::vector<std::string> inputPaths,
-        std::string outputDirectory,
-        std::size_t queueCapacity);
+    // Constructor
+    Pipeline(
+        std::vector<std::filesystem::path> input_paths,
+        std::filesystem::path output_path,
+        std::size_t queue_capacity
+    );
 
-    void run();   // blocks until all images have flowed through and been saved
+    // Run all stages.
+    void run();
+
+    // Getters
+    std::size_t totalSucceededCount() const { return total_succeeded_count_; }
+    std::size_t totalFailedCount() const { return all_errors_.size(); }
+    const std::vector<ProcessingError>& errors() const { return all_errors_; }
 
 private:
-    PipelineQueue<Image> loadToBlur_;
-    PipelineQueue<Image> blurToHistogram_;
-    PipelineQueue<Image> histogramToSave_;
+    // Collect result metrics.
+    void collectSummary();
 
-    LoadStage loadStage_;
-    BlurStage blurStage_;
-    HistogramEqualizationStage histogramStage_;
-    SaveStage saveStage_;
+    // Processing queues
+    PipelineQueue<Image> load_to_blur_;
+    PipelineQueue<Image> blur_to_histogram_;
+    PipelineQueue<Image> histogram_to_save_;
+
+    // Stages
+    std::vector<std::unique_ptr<PipelineStage>> stages_;
+
+    // Worker threads
+    std::vector<std::thread> threads_;
+
+    // Result metrics
+    std::size_t total_succeeded_count_{}; // kind of useless?
+    std::vector<ProcessingError> all_errors_;
 };

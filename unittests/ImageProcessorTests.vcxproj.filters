@@ -39,6 +39,12 @@
     <ClCompile Include="pipeline\PipelineQueueTests.cpp">
       <Filter>Source Files\pipeline</Filter>
     </ClCompile>
+    <ClCompile Include="pipeline\PipelineStagesTests.cpp">
+      <Filter>Source Files\pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="pipeline\PipelineTests.cpp">
+      <Filter>Source Files\pipeline</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
